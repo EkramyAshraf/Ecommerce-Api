@@ -70,6 +70,31 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const setImageUrl = (doc) => {
+  if (doc.images) {
+    const imageList = [];
+    doc.images.forEach((el) => {
+      const imageUrl = `${process.env.BASE_URL}/products/${el}`;
+      imageList.push(imageUrl);
+    });
+    doc.images = imageList;
+  }
+
+  if (doc.coverImage) {
+    const imageUrl = `${process.env.BASE_URL}/products/${doc.coverImage}`;
+    doc.coverImage = imageUrl;
+  }
+};
+
+//set Image url in DB find & update
+productSchema.post("init", (doc) => {
+  setImageUrl(doc);
+});
+
+//set Image url in DB create
+productSchema.post("save", (doc) => {
+  setImageUrl(doc);
+});
 //mongoose query middleware
 productSchema.pre(/^find/, function (next) {
   this.populate({

@@ -6,6 +6,8 @@ const {
   getBrand,
   updateBrand,
   deleteBrand,
+  uploadBrandImage,
+  resizeBrandImage,
 } = require("../controllers/brandController");
 
 const {
@@ -17,11 +19,14 @@ const {
 
 const router = express.Router();
 
-router.route("/").get(getAllBrands).post(createBrandValidator, createBrand);
+router
+  .route("/")
+  .get(getAllBrands)
+  .post(uploadBrandImage, resizeBrandImage, createBrandValidator, createBrand);
 router
   .route("/:id")
   .get(getBrandValidator, getBrand)
-  .patch(updateBrandValidator, updateBrand)
+  .patch(uploadBrandImage, resizeBrandImage, updateBrandValidator, updateBrand)
   .delete(deleteBrandValidator, deleteBrand);
 
 module.exports = router;

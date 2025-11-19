@@ -6,6 +6,8 @@ const {
   getProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImages,
+  resizeProductImages,
 } = require("../controllers/productController");
 
 const {
@@ -20,7 +22,12 @@ const router = express.Router();
 router
   .route("/")
   .get(getAllProducts)
-  .post(createProductValidator, createProduct);
+  .post(
+    uploadProductImages,
+    resizeProductImages,
+    createProductValidator,
+    createProduct
+  );
 router
   .route("/:id")
   .get(getProductValidator, getProduct)

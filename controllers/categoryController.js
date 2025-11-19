@@ -1,27 +1,24 @@
-/* eslint-disable import/no-extraneous-dependencies */
-const asyncHandler = require("express-async-handler");
-const slugify = require("slugify");
-const ApiFeatures = require("../utils/apiFeatures");
+const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
+const asyncHandler = require("express-async-handler");
 
+const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
 const factory = require("./handlersFactory");
-const multer = require("multer");
-const AppError = require("../utils/appError");
 const Category = require("../models/categoryModel");
 
-const multerStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/categories");
-  },
-  filename: function (req, file, cb) {
-    //category-${id}-Date.now.jpeg
-    const ext = file.mimetype.split("/")[1];
-    const fileName = `category-${uuidv4()}-${Date.now()}.${ext}`;
-    cb(null, fileName);
-  },
+// @desc upload category image
+exports.uploadCategoryImage = uploadSingleImage("image");
+
+// @desc resize category image
+exports.resizeCategoryImage = asyncHandler(async (req, res, next) => {
+  const fileName = `category-${uuidv4()}-${Date.now()}.jpeg`;
+  await sharp(req.file.buffer)
+    .resize(600, 600)
+    .jpeg({ quality: 90 })
+    .toFile(`uploads/categories/${fileName}`);
+  req.body.image = fileName;
+  next();
 });
-const upload = multer({ storage: multerStorage });
-exports.uploadCategoryImage = upload.single("image");
 
 // @desc get all category
 // @route GET /api/v1/categories

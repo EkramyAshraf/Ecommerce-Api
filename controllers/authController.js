@@ -1,8 +1,11 @@
 /* eslint-disable arrow-body-style */
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const asyncHandler = require("express-async-handler");
-const AppError = require("../utils/appError");
 const bcrypt = require("bcryptjs");
+const { promisify } = require("util");
+const AppError = require("../utils/appError");
+
 const User = require("../models/userModel");
 
 const createToken = (id) => {
@@ -54,4 +57,87 @@ exports.login = asyncHandler(async (req, res, next) => {
     status: "success",
     token,
   });
+});
+
+// @desc   make sure the user is logged in
+exports.protect = asyncHandler(async (req, res, next) => {
+  //1)Getting token and check if it is there
+  let token = "";
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    // eslint-disable-next-line prefer-destructuring
+    token = req.headers.authorization.split(" ")[1];
+  }
+  if (!token) {
+    return next(
+      new AppError("You are not logged in, please login to get access", 401)
+    );
+  }
+
+  //2)verification token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  //3)check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(new AppError("this user is no longer exists", 401));
+  }
+
+  //4)check if user change his password after login
+  if (currentUser.passwordChangedAt) {
+    const changedTimeStamp = parseInt(
+      currentUser.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    if (changedTimeStamp > decoded.iat) {
+      return next(
+        new AppError("user recently change password, please login again!", 401)
+      );
+    }
+  }
+
+  //5)Grant Access to protected routes
+  req.user = currentUser;
+  next();
+});
+
+// @desc    Authorization (User Permissions)
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError("You are not allowed to access this route", 403)
+      );
+    }
+    next();
+  };
+};
+
+// @desc forgot password
+// @route POST /api/v1/auth/forgotPassword
+// @access public
+
+exports.forgotPassword = asyncHandler(async (req, res, next) => {
+  //1)get user based on Email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError("there is no user for that Email", 404));
+  }
+  console.log(user);
+  //2)if user exist ,generate random 6 digits and encrypted it and save to DB
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedResetCode = crypto
+    .createHash("sha256")
+    .update(resetCode)
+    .digest("hex");
+  console.log(resetCode, hashedResetCode);
+
+  user.passwordResetCode = hashedResetCode;
+  //add expiration time for password reset code
+  user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  user.passwordResetVerified = false;
+
+  user.save();
 });

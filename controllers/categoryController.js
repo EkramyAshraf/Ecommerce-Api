@@ -11,6 +11,9 @@ exports.uploadCategoryImage = uploadSingleImage("image");
 
 // @desc resize category image
 exports.resizeCategoryImage = asyncHandler(async (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
   const fileName = `category-${uuidv4()}-${Date.now()}.jpeg`;
   await sharp(req.file.buffer)
     .resize(600, 600)

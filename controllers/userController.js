@@ -3,10 +3,9 @@ const { v4: uuidv4 } = require("uuid");
 const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/appError");
 const ApiFeatures = require("../utils/apiFeatures");
-
+const bcrypt = require("bcryptjs");
 const factory = require("./handlersFactory");
 const { uploadSingleImage } = require("../middlewares/uploadImageMiddleware");
-
 const User = require("../models/userModel");
 
 // @desc upload user image
@@ -28,7 +27,7 @@ exports.resizeUserImage = asyncHandler(async (req, res, next) => {
 
 // @desc get all users
 // @route GET /api/v1/users
-// @access public
+// @access private
 exports.getAllUsers = factory.getAll(User, "Users");
 
 // @desc create user
@@ -38,7 +37,7 @@ exports.createUser = factory.createOne(User);
 
 // @desc get a specific user
 // @route GET /api/v1/users/:id
-// @access public
+// @access private
 exports.getUser = factory.getOne(User);
 // @desc update a specific user
 // @route PATCH /api/v1/users/:id
@@ -71,7 +70,8 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
   const document = await User.findByIdAndUpdate(
     req.params.id,
     {
-      password: req.body.password,
+      password: await bcrypt.hash(req.body.password, 12),
+      passwordChangedAt: Date.now(),
     },
     {
       new: true,

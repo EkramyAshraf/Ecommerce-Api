@@ -30,14 +30,17 @@ exports.createSubCategoryValidator = [
 exports.updateSubCategoryValidator = [
   check("id").isMongoId().withMessage("invalid category id format"),
   check("category")
+    .optional()
     .notEmpty()
     .withMessage("SubCategory must belongs to parent Category")
     .isMongoId()
     .withMessage("invalid category id format"),
-  body("name").custom((val, { req }) => {
-    req.body.slug = slugify(val);
-    return true;
-  }),
+  body("name")
+    .optional()
+    .custom((val, { req }) => {
+      req.body.slug = slugify(val);
+      return true;
+    }),
   validatorMiddleware,
 ];
 

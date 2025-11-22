@@ -104,6 +104,7 @@ exports.updateUserValidator = [
       return true;
     }),
   check("email")
+    .optional()
     .notEmpty()
     .withMessage("Email required")
     .isEmail()

@@ -9,6 +9,7 @@ const {
   uploadProductImages,
   resizeProductImages,
 } = require("../controllers/productController");
+const authController = require("../controllers/authController");
 
 const {
   getProductValidator,
@@ -23,6 +24,8 @@ router
   .route("/")
   .get(getAllProducts)
   .post(
+    authController.protect,
+    authController.restrictTo("admin", "manager"),
     uploadProductImages,
     resizeProductImages,
     createProductValidator,
@@ -31,7 +34,17 @@ router
 router
   .route("/:id")
   .get(getProductValidator, getProduct)
-  .patch(updateProductValidator, updateProduct)
-  .delete(deleteProductValidator, deleteProduct);
+  .patch(
+    authController.protect,
+    authController.restrictTo("admin", "manager"),
+    updateProductValidator,
+    updateProduct
+  )
+  .delete(
+    authController.protect,
+    authController.restrictTo("admin"),
+    deleteProductValidator,
+    deleteProduct
+  );
 
 module.exports = router;

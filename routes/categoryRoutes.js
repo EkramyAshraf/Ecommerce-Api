@@ -24,7 +24,7 @@ router.use("/:categoryId/subcategories", subCategoryRoutes);
 router.use("/:categoryId/subcategories", subCategoryRoutes);
 router
   .route("/")
-  .get(getAllCategories)
+  .get(authController.protect, getAllCategories)
   .post(
     authController.protect,
     authController.restrictTo("admin"),

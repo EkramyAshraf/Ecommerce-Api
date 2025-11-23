@@ -51,6 +51,11 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
+
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
 // 2- Create model
 const User = mongoose.model("User", userSchema);
 

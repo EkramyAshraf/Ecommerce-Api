@@ -41,9 +41,13 @@ exports.createOne = (Model) =>
     });
   });
 
-exports.getOne = (Model) =>
+exports.getOne = (Model, populationOPt) =>
   asyncHandler(async (req, res, next) => {
-    const document = await Model.findById(req.params.id);
+    let query = Model.findById(req.params.id);
+    if (populationOPt) {
+      query = query.populate(populationOPt);
+    }
+    const document = await query;
     if (!document) {
       return next(
         new AppError(`No document for this id ${req.params.id}`, 404)

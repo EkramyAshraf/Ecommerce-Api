@@ -11,6 +11,7 @@ const brandRouter = require("./routes/brandRoutes");
 const productRouter = require("./routes/productRoutes");
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
+const reviewRouter = require("./routes/reviewRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./middlewares/errorMiddleware");
 
@@ -41,6 +42,7 @@ app.use("/api/v1/brands", brandRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 //Error Handling
 app.use((req, res, next) => {

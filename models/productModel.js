@@ -67,7 +67,7 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 const setImageUrl = (doc) => {
@@ -103,6 +103,13 @@ productSchema.pre(/^find/, function (next) {
   });
   next();
 });
+
+productSchema.virtual("reviews", {
+  ref: "Review",
+  foreignField: "product",
+  localField: "_id",
+});
+
 // 2- Create model
 const Product = mongoose.model("Product", productSchema);
 

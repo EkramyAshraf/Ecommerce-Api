@@ -1,3 +1,4 @@
+const Product = require("./productModel");
 const mongoose = require("mongoose");
 // 1) Create Schema
 const reviewSchema = new mongoose.Schema(
@@ -32,5 +33,51 @@ reviewSchema.pre(/^find/, function (next) {
   });
   next();
 });
+
+reviewSchema.statics.calcAvgRatingAndQuantity = async function (productId) {
+  const result = await this.aggregate([
+    //1)get all reviews on specific productId
+    {
+      $match: { product: productId },
+    },
+    {
+      //2)group reviews based on productId
+      $group: {
+        _id: "$product",
+        avgRating: { $avg: "$ratings" },
+        ratingQuantity: { $sum: 1 },
+      },
+    },
+  ]);
+  console.log(result);
+  if (result.length > 0) {
+    await Product.findByIdAndUpdate(productId, {
+      ratingsAvg: result[0].avgRating,
+      ratingsQuantity: result[0].ratingQuantity,
+    });
+  } else {
+    await Product.findByIdAndUpdate(productId, {
+      ratingsAvg: 0,
+      ratingsQuantity: 0,
+    });
+  }
+};
+
+reviewSchema.post("save", async function () {
+  await this.constructor.calcAvgRatingAndQuantity(this.product);
+});
+
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  this.r = await this.clone().findOne();
+  console.log(this.r);
+  next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function () {
+  if (this.r) {
+    await this.r.constructor.calcAvgRatingAndQuantity(this.r.product);
+  }
+});
+
 const Review = mongoose.model("Review", reviewSchema);
 module.exports = Review;

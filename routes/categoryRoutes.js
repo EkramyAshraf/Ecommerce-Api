@@ -20,8 +20,10 @@ const {
 const authController = require("../controllers/authController");
 
 const router = express.Router();
+
+//nested routes
 router.use("/:categoryId/subcategories", subCategoryRoutes);
-router.use("/:categoryId/subcategories", subCategoryRoutes);
+
 router
   .route("/")
   .get(authController.protect, getAllCategories)

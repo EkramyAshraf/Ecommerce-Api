@@ -67,7 +67,7 @@ exports.deleteReviewValidator = [
           throw new Error(`there is no review for this ${val}`);
         }
 
-        if (review.user.toString() !== req.user._id.toString()) {
+        if (review.user._id.toString() !== req.user._id.toString()) {
           throw new Error("you are not allowed to perform this action");
         }
       }

@@ -74,6 +74,7 @@ exports.getAll = (Model, modelName) =>
     //execute query
     const { query, paginationResult } = features;
     const documents = await query;
+
     res.status(200).json({
       status: "success",
       result: documents.length,

@@ -1,6 +1,25 @@
-const asyncHandler = require("express-async-handler");
-
 const factory = require("./handlersFactory");
+
+//middlewares for nested routes
+exports.setProductUserIdsToBody = (req, res, next) => {
+  if (req.params.productId) {
+    req.body.product = req.params.productId;
+    req.body.user = req.user._id;
+  }
+  if (!req.body.user) {
+    req.body.user = req.user._id;
+  }
+  next();
+};
+
+exports.createFilterObj = (req, res, next) => {
+  let filterObj = {};
+  if (req.params.productId) {
+    filterObj = { product: req.params.productId };
+    req.filterObj = filterObj;
+  }
+  next();
+};
 
 const Review = require("../models/reviewModel");
 

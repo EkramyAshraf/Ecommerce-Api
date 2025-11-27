@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const slugify = require("slugify");
 const validatorMiddleware = require("../../middlewares/validatorMiddleware");
 const User = require("../../models/userModel");
+const Product = require("../../models/productModel");
 
 exports.getUserValidator = [
   check("id").isMongoId().withMessage("invalid User id format"),
@@ -209,5 +210,56 @@ exports.updateLoggedUserValidator = [
 
   check("role").optional(),
 
+  validatorMiddleware,
+];
+
+exports.addToWishlistValidator = [
+  check("productId")
+    .notEmpty()
+    .withMessage("wishlist must be belong to a product")
+    .isMongoId()
+    .withMessage("Invalid ID formate")
+    .custom(async (val, { req }) => {
+      //check about product
+      const product = await Product.findById(val);
+      if (!product) {
+        throw new Error(`product not found`);
+      }
+
+      return true;
+    }),
+  validatorMiddleware,
+];
+
+exports.deleteWishlistValidator = [
+  check("productId")
+    .isMongoId()
+    .withMessage("Invalid ID formate")
+    .custom(async (val, { req }) => {
+      if (!req.user.wishlist.includes(val)) {
+        throw new Error(`product not found in wishlist`);
+      }
+      return true;
+    }),
+  validatorMiddleware,
+];
+
+exports.addAddressValidator = [
+  check("alias")
+    .optional()
+    .custom(async (val, { req }) => {
+      if (!val) {
+        return true;
+      }
+      //check about product
+      const user = await User.findById(req.user._id);
+      user.addresses.forEach((el) => {
+        if (el.alias.toLowerCase() === val.toLowerCase()) {
+          throw new Error("this alias is found before");
+        }
+      });
+
+      return true;
+    }),
   validatorMiddleware,
 ];

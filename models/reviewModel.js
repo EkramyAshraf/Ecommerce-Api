@@ -1,5 +1,5 @@
-const Product = require("./productModel");
 const mongoose = require("mongoose");
+const Product = require("./productModel");
 // 1) Create Schema
 const reviewSchema = new mongoose.Schema(
   {

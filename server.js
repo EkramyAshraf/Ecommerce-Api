@@ -1,7 +1,9 @@
 const path = require("path");
-
-const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
+const compression = require("compression");
+const express = require("express");
+
 const morgan = require("morgan");
 const dbConnection = require("./config/database");
 const mountRoutes = require("./routes");
@@ -15,11 +17,19 @@ process.on("uncaughtException", (err) => {
   console.log(err.name, err.message);
   process.exit(1);
 });
+
 //connect with db
 dbConnection();
 
 //express app
 const app = express();
+
+//enable other domains to access the application
+app.use(cors());
+
+//compress all responses
+app.use(compression());
+// app.options("*", cors());
 
 //middlewares
 app.use(express.json());

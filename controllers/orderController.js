@@ -155,5 +155,24 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.webhookCheckout = asyncHandler(async (req, res, next) => {
+  let event;
+  // Get the signature sent by Stripe
+  const signature = req.headers["stripe-signature"];
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    return res.sendStatus(400).send(`⚠️  Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    console.log("create order here....");
+    console.log(event);
+  }
+});
 exports.findAllOrders = factory.getAll(Order);
 exports.findSpecificOrder = factory.getOne(Order);

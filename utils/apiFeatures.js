@@ -61,8 +61,14 @@ class ApiFeatures {
 
   sort() {
     if (this.queryString.sort) {
-      const sortBy = this.queryString.sort.split(",").join(" ");
-      this.query = this.query.sort(sortBy);
+      let sortBy;
+      if (typeof this.queryString.sort === "string") {
+        sortBy = this.queryString.sort.split(",").join(" ");
+        this.query = this.query.sort(sortBy);
+      } else if (Array.isArray(this.queryString.sort)) {
+        sortBy = this.queryString.sort.join(" ");
+        this.query = this.query.sort(sortBy);
+      }
     } else {
       this.query = this.query.sort("-createdAt");
     }

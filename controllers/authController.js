@@ -8,6 +8,7 @@ const AppError = require("../utils/appError");
 const sendEmail = require("../utils/email");
 const User = require("../models/userModel");
 const createToken = require("../utils/createToken");
+const { sanitizeUser } = require("../utils/sanitizeUser");
 
 // @desc signup
 // @route POST /api/v1/auth/signup
@@ -50,6 +51,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   const token = createToken(user._id);
   res.status(200).json({
     status: "success",
+    data: sanitizeUser(user),
     token,
   });
 });

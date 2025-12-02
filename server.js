@@ -3,8 +3,12 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const compression = require("compression");
 const express = require("express");
-
 const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
+const hpp = require("hpp");
+const { xss } = require("express-xss-sanitizer");
+const expressMongoSanitize = require("@exortek/express-mongo-sanitize");
+
 const dbConnection = require("./config/database");
 const mountRoutes = require("./routes");
 const AppError = require("./utils/appError");
@@ -25,12 +29,6 @@ dbConnection();
 //express app
 const app = express();
 
-app.post(
-  "/webhook-checkout",
-  express.raw({ type: "application/json" }),
-  webhookCheckout
-);
-
 //enable other domains to access the application
 app.use(cors());
 
@@ -39,11 +37,35 @@ app.use(compression());
 // app.options("*", cors());
 
 //middlewares
-app.use(express.json());
+app.use(express.json({ limit: "20kb" }));
 app.use(express.static(path.join(__dirname, "uploads")));
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+// Data sanitization
+app.use(expressMongoSanitize());
+app.use(xss());
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: ["sold", "quantity", "price", "ratingsAvg", "ratingsQuantity"],
+  })
+);
+
+const limiter = rateLimit({
+  max: 5,
+  windowMs: 60 * 60 * 1000,
+  message: "Too many requests from this IP, please try again in an hour!",
+});
+
+//Apply the rate limiting middleware to all requests
+app.use("/api", limiter);
+
+app.post(
+  "/webhook-checkout",
+  express.raw({ type: "application/json" }),
+  webhookCheckout
+);
 
 //Mount Routes
 mountRoutes(app);

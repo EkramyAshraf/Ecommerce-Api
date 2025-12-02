@@ -11,7 +11,41 @@ const factory = require("./handlersFactory");
 const Order = require("../models/orderModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
+const User = require("../models/userModel");
 
+const createCardOrder = async (session) => {
+  const cartId = session.client_reference_id;
+  const shippingAddress = session.metadata;
+  const orderPrice = session.amount_total / 100;
+
+  //1)get cart based on cartId
+  const cart = await Cart.findById(cartId);
+  const user = await User.findOne({ email: session.customer_email });
+
+  //2)create order with default payment type cash
+  const order = await Order.create({
+    user: user._id,
+    cartItems: cart.cartItems,
+    shippingAddress,
+    totalOrderPrice: orderPrice,
+    isPaid: true,
+    paidAt: Date.now(),
+    paymentMethodType: "card",
+  });
+
+  //4)after create order, increment product sold and decrement product quantity
+  if (order) {
+    const bulkOptions = cart.cartItems.map((item) => ({
+      updateOne: {
+        filter: { _id: item.product },
+        update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+      },
+    }));
+    await Product.bulkWrite(bulkOptions, {});
+    //5) clear cart depend on cart Items
+    await Cart.findByIdAndDelete(cartId);
+  }
+};
 // @desc create order
 // @route POST /api/v1/orders/:cartItem
 // @access private
@@ -155,6 +189,9 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    This webhook will run when stripe payment success paid
+// @route   POST /webhook-checkout
+// @access  Protected/User
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   let event;
   // Get the signature sent by Stripe
@@ -170,8 +207,11 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
   }
 
   if (event.type === "checkout.session.completed") {
-    console.log("create order here....");
-    console.log(event);
+    createCardOrder(event.data.object);
+
+    res.status(200).json({
+      received: true,
+    });
   }
 });
 exports.findAllOrders = factory.getAll(Order);

@@ -77,24 +77,24 @@ npm install
 Create a `.env` file in the root:
 
 ```
-NODE_ENV="development"
+NODE_ENV="development"   # Use 'production' when deploying to Railway
 PORT=3000
 DATABASE_PASSWORD=
-DATABASE=mongodb+srv://
-JWT_SECRET=
+DATABASE=mongodb+srv://<username>:<password>@cluster0.mongodb.net/dbname
+JWT_SECRET=<your_jwt_secret>
 JWT_EXPIRES_IN=90d
 JWT_COOKIE_EXPIRES_IN=90
 
-EMAIL_USERNAME=
-EMAIL_PASSWORD=
+EMAIL_USERNAME=<your_email>
+EMAIL_PASSWORD=<your_password>
 EMAIL_PORT=587
 EMAIL_HOST=sandbox.smtp.mailtrap.io
-EMAIL_FROM=
-STRIPE_SECRET=
-STRIPE_WEBHOOK_SECRET=
+EMAIL_FROM=<from_email>
+STRIPE_SECRET=<stripe_secret>
+STRIPE_WEBHOOK_SECRET=<stripe_webhook_secret>
 ```
 
-> Example values can be used for testing with MongoDB Atlas or Stripe sandbox.
+> Make sure to switch `NODE_ENV` to `production` when deploying.
 
 ---
 
